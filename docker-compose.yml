@@ -1,0 +1,27 @@
+web:
+    image: nginx:latest
+    container_name: web
+    ports:
+        - "8080:80"
+    volumes:
+        - ./code:/code
+        - ./site.conf:/etc/nginx/conf.d/site.conf
+    links:
+        - php
+#PHP
+php:
+    image: php:7-fpm
+    container_name: app
+    volumes:
+        - ./code:/code
+#MySQL
+db:
+ image: mysql:5.7.22
+ container_name: db
+ ports:
+  - "3306:3306"
+ environment:
+  MYSQL_DATABASE: root
+  MYSQL_ROOT_PASSWORD: root
+  SERVICE_TAGS: dev
+  SERVICE_NAME: mysql
