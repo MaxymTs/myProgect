@@ -1,27 +1,52 @@
-web:
-    image: nginx:latest
-    container_name: web
-    ports:
-        - "8080:80"
-    volumes:
-        - ./code:/code
-        - ./site.conf:/etc/nginx/conf.d/site.conf
-    links:
-        - php
-#PHP
-php:
-    image: php:7-fpm
+version: '3'
+services:
+
+  #PHP Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: app-php
     container_name: app
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
     volumes:
-        - ./code:/code
-#MySQL
-db:
- image: mysql:5.7.22
- container_name: db
- ports:
-  - "3306:3306"
- environment:
-  MYSQL_DATABASE: root
-  MYSQL_ROOT_PASSWORD: root
-  SERVICE_TAGS: dev
-  SERVICE_NAME: mysql
+      - ./:/var/www
+      - ./site.conf:/etc/nginx/conf.d/site.conf
+    networks:
+      - app-network
+
+  #MySQL Service
+  db:
+    image: mysql:5.7.22
+    container_name: db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: your_mysql_root_password
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - dbdata:/var/lib/mysql/
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - app-network
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+#Volumes
+volumes:
+  dbdata:
+    driver: local
